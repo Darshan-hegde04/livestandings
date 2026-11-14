@@ -1,0 +1,8 @@
+target
+.git
+.idea
+web/node_modules
+web/dist
+loadgen
+*.md
+.cursor
