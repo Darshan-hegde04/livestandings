@@ -1,0 +1,14 @@
+global:
+  scrape_interval: 5s
+
+scrape_configs:
+  # Compose server service (docker network DNS).
+  - job_name: livestandings
+    metrics_path: /actuator/prometheus
+    static_configs:
+      - targets: ["server:8080"]
+  # Host-run Spring Boot (docker compose prometheus + local :8080).
+  - job_name: livestandings-host
+    metrics_path: /actuator/prometheus
+    static_configs:
+      - targets: ["host.docker.internal:8080"]

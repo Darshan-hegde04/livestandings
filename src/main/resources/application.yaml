@@ -1,0 +1,57 @@
+spring:
+  application:
+    name: livestandings
+  datasource:
+    url: ${MYSQL_URL:jdbc:mysql://localhost:3307/livestandings?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true}
+    username: ${MYSQL_USER:livestandings}
+    password: ${MYSQL_PASSWORD:livestandings}
+  jpa:
+    hibernate:
+      ddl-auto: update
+    open-in-view: false
+    properties:
+      hibernate:
+        jdbc:
+          time_zone: UTC
+  kafka:
+    # Host local run uses PLAINTEXT_HOST (29092). Compose server uses kafka:9092.
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:29092}
+    producer:
+      acks: all
+      properties:
+        enable.idempotence: true
+        max.in.flight.requests.per.connection: 5
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JacksonJsonSerializer
+    consumer:
+      group-id: ${RESULTS_CONSUMER_GROUP:livestandings-results-applier}
+      enable-auto-commit: false
+      auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JacksonJsonDeserializer
+      properties:
+        spring.json.trusted.packages: com.phinixlabs.livestandings.kafka
+        spring.json.value.default.type: com.phinixlabs.livestandings.kafka.ResultEvent
+    listener:
+      ack-mode: manual
+
+server:
+  port: ${SERVER_PORT:8080}
+
+livestandings:
+  organiser-token: ${ORGANISER_TOKEN:dev-organiser-token}
+  kafka:
+    topics:
+      match-results: ${MATCH_RESULTS_TOPIC:match-results}
+    consumer-group: ${RESULTS_CONSUMER_GROUP:livestandings-results-applier}
+  metrics:
+    lag-probe-ms: 5000
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,prometheus,info
+  endpoint:
+    health:
+      show-details: when_authorized
